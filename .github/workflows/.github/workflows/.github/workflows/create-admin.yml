@@ -1,0 +1,28 @@
+name: Create first administrator (run once)
+on:
+  workflow_dispatch:
+    inputs:
+      login_id:
+        description: Admin ID
+        required: true
+        default: ADMIN01
+      full_name:
+        description: Administrator name
+        required: true
+      pin:
+        description: 6-digit PIN (visible in this run - change it after first login)
+        required: true
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    env:
+      LOGIN_ID: ${{ inputs.login_id }}
+      FULL_NAME: ${{ inputs.full_name }}
+      PIN: ${{ inputs.pin }}
+      REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SETUP_SECRET: ${{ secrets.SETUP_SECRET }}
+    steps:
+      - run: |
+          body=$(jq -n --arg l "$LOGIN_ID" --arg n "$FULL_NAME" --arg p "$PIN" '{login_id:$l,full_name:$n,pin:$p}')
+          curl -sS -X POST "https://$REF.supabase.co/functions/v1/bootstrap-admin" \
+            -H "x-setup-secret: $SETUP_SECRET" -H "Content-Type: application/json" -d "$body"
