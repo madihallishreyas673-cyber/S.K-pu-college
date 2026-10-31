@@ -28,4 +28,36 @@ for name in ("build.gradle.kts", "build.gradle"):
         break
 else:
     sys.exit("build.gradle not found")
+
+# Plugins such as file_picker are compiled against an older Android SDK, but newer AndroidX libraries
+# require API 36. Force every plugin module to compile against 36 (this does not change the minimum phone version).
+KTS = """// Smart School: build every plugin against Android API 36
+subprojects {
+    afterEvaluate {
+        extensions.findByName("android")?.let { ext ->
+            (ext as com.android.build.gradle.BaseExtension).compileSdkVersion(36)
+        }
+    }
+}
+
+"""
+GROOVY = """// Smart School: build every plugin against Android API 36
+subprojects {
+    afterEvaluate { p ->
+        if (p.hasProperty('android')) { p.android.compileSdkVersion 36 }
+    }
+}
+
+"""
+for name, block in (("build.gradle.kts", KTS), ("build.gradle", GROOVY)):
+    root = pathlib.Path("android") / name
+    if root.exists():
+        t = root.read_text()
+        if "Smart School: build every plugin" not in t:
+            i = t.find("allprojects")
+            t = t + "\n" + block if i < 0 else t[:i] + block + t[i:]
+            root.write_text(t)
+        break
+else:
+    sys.exit("android root build.gradle not found")
 print("Android project patched.")
