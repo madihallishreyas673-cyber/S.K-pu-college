@@ -8,6 +8,7 @@ import '../models.dart';
 import '../services/api.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+   import 'login_screen.dart' show roleTitles;
 import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
